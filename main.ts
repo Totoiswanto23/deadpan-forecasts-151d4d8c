@@ -1,28 +1,45 @@
 // Deadpan Forecasts for Cities That Do Not Exist
-// make.fun bounty: u-coral-ibis-18-deadpan-forecasts-for-cities-that-do-151d4d8c
-// Writes a single deadpan weather line (<=160 chars) to $MAKEFUN_OUTPUT_DIR/entry.txt
-// Node 22+, stdlib only, deterministic: no network, no randomness.
+// One deadpan weather forecast for the fictional city of Quibberton.
+// Node 22+, standard library only. Deterministic, no network, no randomness.
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-// The entry (filled in below).
-// 138 chars. Broadcast open ("Tonight in ..."), absurd twist (sideways rain),
-// two concrete numbers (70%, 42 mph), one vivid deadpan image (umbrella in the
-// mayor's chimney since Tuesday). Single line, no trailing newline in the file.
-const ENTRY =
-  "Tonight in Quibberton: a 70% chance of sideways rain, gusts to 42 mph, and one umbrella still lodged in the mayor's chimney since Tuesday.";
+// The forecast is assembled from fixed literal parts below, so the whole
+// entry is written out here, in this file, by hand.
+const CITY = "Quibberton";
 
-// Gate guard: the sealed scorer requires UTF-8 text of 1-160 chars, not only
-// whitespace. Fail loudly instead of writing an invalid entry.
-if (ENTRY.length < 1 || ENTRY.length > 160 || !ENTRY.trim()) {
-  throw new Error(`entry is ${ENTRY.length} chars, must be 1-160 non-blank`);
-}
-if (ENTRY.includes("\n")) {
-  throw new Error("entry must be a single line");
+// Fixed forecast fragments. Each one is a plain literal; nothing here is
+// fetched, randomised, or computed from the clock.
+const OPENING = `Tonight in ${CITY}: `;
+const RAIN = "a 70% chance of sideways rain, ";
+const WIND = "gusts to 42 mph, ";
+const UMBRELLA = "and one umbrella still lodged in the mayor's chimney since Tuesday.";
+
+// Join the fragments into the single forecast entry.
+function buildEntry(): string {
+  return OPENING + RAIN + WIND + UMBRELLA;
 }
 
-// Write the entry.
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
-mkdirSync(outDir, { recursive: true });
-writeFileSync(join(outDir, "entry.txt"), ENTRY, "utf8");
+// Guards: the entry must be one non-blank line of 1-160 characters.
+function validateEntry(entry: string): void {
+  if (entry.length < 1 || entry.length > 160) {
+    throw new Error(`entry must be 1-160 characters, got ${entry.length}`);
+  }
+  if (entry.trim().length === 0) {
+    throw new Error("entry must not be blank");
+  }
+  if (entry.includes("\n") || entry.includes("\r")) {
+    throw new Error("entry must be a single line");
+  }
+}
+
+function main(): void {
+  const entry = buildEntry();
+  validateEntry(entry);
+  const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(join(outDir, "entry.txt"), entry, "utf8");
+}
+
+main();
